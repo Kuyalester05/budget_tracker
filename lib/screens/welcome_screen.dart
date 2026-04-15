@@ -5,6 +5,7 @@ import '../theme/app_text_styles.dart';
 import '../widgets/bursa_logo.dart';
 import '../widgets/continue_button.dart';
 import '../widgets/feature_card.dart';
+import 'setup_screen.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -28,21 +29,22 @@ class WelcomeScreen extends StatelessWidget {
   ];
 
   void _onContinue(BuildContext context) {
-    // Navigate to next screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Continuing...')),
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SetupScreen()),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkGreen,
-      body: Column(
-        children: [
-          Expanded(child: _buildTopSection()),
-          _buildBottomSheet(context),
-        ],
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+        child: Column(
+          children: [
+            Expanded(child: _buildTopSection()),
+            _buildBottomSheet(context),
+          ],
+        ),
       ),
     );
   }
@@ -50,7 +52,6 @@ class WelcomeScreen extends StatelessWidget {
   Widget _buildTopSection() {
     return Container(
       width: double.infinity,
-      color: AppColors.darkGreen,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,

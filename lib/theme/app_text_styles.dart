@@ -12,7 +12,7 @@ class AppTextStyles {
   );
 
   static const TextStyle welcomeTitle = TextStyle(
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: FontWeight.w800,
     color: AppColors.white,
     height: 1.2,

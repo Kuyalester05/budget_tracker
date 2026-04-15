@@ -14,7 +14,7 @@ class BursaLogo extends StatelessWidget {
       height: size,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
-        color: AppColors.primaryGreen,
+        gradient: AppColors.logoGradient,
       ),
       child: Center(
         child: RichText(

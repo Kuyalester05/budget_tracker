@@ -33,7 +33,7 @@ class FeatureCard extends StatelessWidget {
       width: 48,
       height: 48,
       decoration: BoxDecoration(
-        color: AppColors.iconBg,
+        gradient: AppColors.iconBgGradient,
         borderRadius: BorderRadius.circular(10),
       ),
       child: Icon(

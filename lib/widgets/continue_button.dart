@@ -4,25 +4,32 @@ import '../theme/app_text_styles.dart';
 
 class ContinueButton extends StatelessWidget {
   final VoidCallback onPressed;
+  final String label;
 
-  const ContinueButton({super.key, required this.onPressed});
+  const ContinueButton({
+    super.key,
+    required this.onPressed,
+    this.label = 'CONTINUE',
+  });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
+    return Container(
       width: double.infinity,
       height: 54,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.buttonGreen,
-          foregroundColor: AppColors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+      decoration: BoxDecoration(
+        gradient: AppColors.buttonGradient,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(12),
+          child: Center(
+            child: Text(label, style: AppTextStyles.buttonText),
           ),
         ),
-        child: const Text('CONTINUE', style: AppTextStyles.buttonText),
       ),
     );
   }
