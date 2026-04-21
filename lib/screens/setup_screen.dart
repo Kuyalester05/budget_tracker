@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
 import '../widgets/continue_button.dart';
+import 'home_screen.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({super.key});
@@ -26,9 +27,8 @@ class _SetupScreenState extends State<SetupScreen> {
       );
       return;
     }
-    // TODO: Navigate to main/home screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Welcome, $name!')),
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => HomeScreen(userName: name)),
     );
   }
 
@@ -100,25 +100,16 @@ class _SetupScreenState extends State<SetupScreen> {
         const SizedBox(height: 8),
         TextField(
           controller: _nameController,
-          style: const TextStyle(
-            fontSize: 15,
-            color: AppColors.textDark,
-          ),
+          style: const TextStyle(fontSize: 15, color: AppColors.textDark),
           decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 16,
-            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
               borderSide: const BorderSide(color: AppColors.cardBorder),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(
-                color: AppColors.primaryGreen,
-                width: 1.5,
-              ),
+              borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
             ),
             filled: true,
             fillColor: AppColors.white,
