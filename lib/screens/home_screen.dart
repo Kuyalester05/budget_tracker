@@ -5,6 +5,7 @@ import '../theme/app_colors.dart';
 import '../widgets/set_budget_sheet.dart';
 import '../widgets/transaction_item.dart';
 import 'add_transaction_screen.dart';
+import 'analytics_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -89,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
             recentTransactions: _transactions,
             onAdd: _addTransaction,
           ),
-          _buildAnalyticsPage(),
+          AnalyticsScreen(transactions: _transactions),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -418,91 +419,6 @@ class _HomeScreenState extends State<HomeScreen> {
             style: TextStyle(
                 fontSize: 13, color: Color(0xFFAAAAAA), height: 1.5),
           ),
-        ],
-      ),
-    );
-  }
-
-  // ─────────────────────────── ANALYTICS PAGE ───────────────────────
-
-  Widget _buildAnalyticsPage() {
-    final fmt = NumberFormat('#,##0.00');
-    final incomeTransactions = _transactions.where((t) => t.isIncome).toList();
-    final expenseTransactions =
-        _transactions.where((t) => !t.isIncome).toList();
-
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 8),
-            const Text('Analytics',
-                style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF1A1A1A))),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _analyticsCard(
-                    '💚 Total Income',
-                    '₱${fmt.format(_totalIn)}',
-                    const Color(0xFFE8F5E9),
-                    const Color(0xFF4CAF50),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _analyticsCard(
-                    '❤️ Total Expense',
-                    '₱${fmt.format(_totalOut)}',
-                    const Color(0xFFFFEBEE),
-                    const Color(0xFFE53935),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _analyticsCard(
-              '💼 Net Balance',
-              '₱${fmt.format(_totalIn - _totalOut)}',
-              const Color(0xFFFFF8E1),
-              const Color(0xFFE6A800),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              '${_transactions.length} total transaction${_transactions.length == 1 ? '' : 's'}',
-              style: const TextStyle(
-                  fontSize: 13, color: Color(0xFF888888)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _analyticsCard(
-      String label, String value, Color bg, Color textColor) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(label,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF555555))),
-          const SizedBox(height: 8),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: textColor)),
         ],
       ),
     );
