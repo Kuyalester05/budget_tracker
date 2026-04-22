@@ -42,4 +42,34 @@ class Transaction {
   });
 
   bool get isIncome => type == TransactionType.income;
+
+  // ── SQLite serialization ───────────────────────────────────────────
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'title': title,
+      'amount': amount,
+      'type': type.name,
+      'category': category.name,
+      'date': date.millisecondsSinceEpoch,
+    };
+  }
+
+  static Transaction fromMap(Map<String, dynamic> map) {
+    return Transaction(
+      id: map['id'] as String,
+      title: map['title'] as String,
+      amount: (map['amount'] as num).toDouble(),
+      type: TransactionType.values.firstWhere(
+        (e) => e.name == map['type'],
+        orElse: () => TransactionType.expense,
+      ),
+      category: TransactionCategory.values.firstWhere(
+        (e) => e.name == map['category'],
+        orElse: () => TransactionCategory.other,
+      ),
+      date: DateTime.fromMillisecondsSinceEpoch(map['date'] as int),
+    );
+  }
 }

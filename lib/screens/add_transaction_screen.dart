@@ -5,7 +5,7 @@ import '../theme/app_colors.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   final List<Transaction> recentTransactions;
-  final void Function(Transaction) onAdd;
+  final Future<void> Function(Transaction) onAdd;
 
   const AddTransactionScreen({
     super.key,
@@ -52,7 +52,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (picked != null) setState(() => _date = picked);
   }
 
-  void _save() {
+  Future<void> _save() async {
     if (_amount <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter an amount greater than ₱0.')),
@@ -65,16 +65,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       );
       return;
     }
+    final now = DateTime.now();
+    // Combine the user-picked date with the exact current time of saving
+    final transactionDate = DateTime(
+      _date!.year,
+      _date!.month,
+      _date!.day,
+      now.hour,
+      now.minute,
+      now.second,
+    );
     final desc = _descController.text.trim();
     final transaction = Transaction(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: now.millisecondsSinceEpoch.toString(),
       title: desc.isEmpty ? _category.label : desc,
       amount: _amount,
       type: _type,
       category: _category,
-      date: _date!,
+      date: transactionDate,
     );
-    widget.onAdd(transaction);
+    await widget.onAdd(transaction);
     // Reset form
     setState(() {
       _amount = 0;
@@ -83,6 +93,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _category = TransactionCategory.salary;
       _type = TransactionType.income;
     });
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Transaction saved!'),
@@ -208,16 +219,37 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        GestureDetector(
-          onTap: _showAmountDialog,
-          child: Text(
-            _amount == 0 ? 'Enter amount here' : '₱${fmt.format(_amount)}',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: _amount == 0 ? const Color(0xFFCCCCCC) : const Color(0xFF1A1A1A),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: _showAmountDialog,
+              child: Text(
+                _amount == 0 ? 'Enter amount here' : '₱${fmt.format(_amount)}',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: _amount == 0 ? const Color(0xFFCCCCCC) : const Color(0xFF1A1A1A),
+                ),
+              ),
             ),
-          ),
+            if (_amount > 0) ...[
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => setState(() => _amount = 0),
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEEEEE),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close_rounded,
+                      size: 15, color: Color(0xFF666666)),
+                ),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 16),
         SingleChildScrollView(
