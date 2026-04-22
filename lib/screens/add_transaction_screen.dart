@@ -208,16 +208,37 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        GestureDetector(
-          onTap: _showAmountDialog,
-          child: Text(
-            _amount == 0 ? 'Enter amount here' : '₱${fmt.format(_amount)}',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              color: _amount == 0 ? const Color(0xFFCCCCCC) : const Color(0xFF1A1A1A),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GestureDetector(
+              onTap: _showAmountDialog,
+              child: Text(
+                _amount == 0 ? 'Enter amount here' : '₱${fmt.format(_amount)}',
+                style: TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  color: _amount == 0 ? const Color(0xFFCCCCCC) : const Color(0xFF1A1A1A),
+                ),
+              ),
             ),
-          ),
+            if (_amount > 0) ...[
+              const SizedBox(width: 10),
+              GestureDetector(
+                onTap: () => setState(() => _amount = 0),
+                child: Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEEEEEE),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.close_rounded,
+                      size: 15, color: Color(0xFF666666)),
+                ),
+              ),
+            ],
+          ],
         ),
         const SizedBox(height: 16),
         SingleChildScrollView(

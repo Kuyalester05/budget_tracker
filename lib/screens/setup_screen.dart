@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_colors.dart';
 import '../widgets/continue_button.dart';
 import 'home_screen.dart';
@@ -19,7 +20,7 @@ class _SetupScreenState extends State<SetupScreen> {
     super.dispose();
   }
 
-  void _onStartTracking() {
+  void _onStartTracking() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -27,6 +28,9 @@ class _SetupScreenState extends State<SetupScreen> {
       );
       return;
     }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_name', name);
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => HomeScreen(userName: name)),
     );

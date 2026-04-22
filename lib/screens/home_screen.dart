@@ -47,7 +47,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _addTransaction(Transaction t) {
-    setState(() => _transactions.insert(0, t));
+    setState(() {
+      _transactions.insert(0, t);
+      _currentIndex = 0; // go to home tab so budget updates are immediately visible
+    });
   }
 
   Future<void> _showSetBudget() async {
@@ -90,7 +93,10 @@ class _HomeScreenState extends State<HomeScreen> {
             recentTransactions: _transactions,
             onAdd: _addTransaction,
           ),
-          AnalyticsScreen(transactions: _transactions),
+          AnalyticsScreen(
+            transactions: _transactions,
+            onBack: () => setState(() => _currentIndex = 0),
+          ),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -173,11 +179,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBudgetCard() {
     final fmt = NumberFormat('#,##0.00');
+    final netBalance = _totalIn - _totalOut;
     final remainingBudget =
-        _budget == null ? null : (_budget! + _totalIn - _totalOut);
+        _budget == null ? netBalance : (_budget! + _totalIn - _totalOut);
     final progress = _budget == null || _budget == 0
         ? 0.0
-        : (remainingBudget! / _budget!).clamp(0.0, 1.0);
+        : (remainingBudget / _budget!).clamp(0.0, 1.0);
 
     return Container(
       margin: const EdgeInsets.only(top: 16),
@@ -217,9 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            _budget == null
-                ? '—'
-                : '₱${fmt.format(remainingBudget)}',
+            '₱${fmt.format(remainingBudget)}',
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
@@ -234,8 +239,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: TextStyle(fontSize: 12, color: Color(0xFF888888))),
               Text(
                 _budget == null
-                    ? 'Budget: —'
-                    : 'Budget: ₱${fmt.format(_budget)}',
+                    ? '₱${fmt.format(netBalance)}'
+                    : 'Remaining: ₱${fmt.format(remainingBudget)}',
                 style:
                     const TextStyle(fontSize: 12, color: Color(0xFF888888)),
               ),
@@ -245,7 +250,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
-              value: _budget == null ? 0 : progress,
+              value: progress,
               minHeight: 8,
               backgroundColor: const Color(0xFFE0E0E0),
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE6A800)),

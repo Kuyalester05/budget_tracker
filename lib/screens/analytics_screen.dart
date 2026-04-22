@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
 import '../theme/app_colors.dart';
+import 'monthly_calendar_screen.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   final List<Transaction> transactions;
+  final VoidCallback? onBack;
 
-  const AnalyticsScreen({super.key, required this.transactions});
+  const AnalyticsScreen({super.key, required this.transactions, this.onBack});
 
   @override
   State<AnalyticsScreen> createState() => _AnalyticsScreenState();
@@ -15,6 +17,7 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   bool _showIncome = true;
   DateTime _selectedMonth = DateTime.now();
+  DateTime? _filterDate; // specific date filter for list
 
   // ── helpers ────────────────────────────────────────────────────────
 
@@ -29,9 +32,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   double get _totalExpense =>
       _monthTx.where((t) => !t.isIncome).fold(0, (s, t) => s + t.amount);
 
-  List<Transaction> get _filtered =>
-      _monthTx.where((t) => t.isIncome == _showIncome).toList()
-        ..sort((a, b) => b.date.compareTo(a.date));
+  List<Transaction> get _filtered {
+    var list = _monthTx.where((t) => t.isIncome == _showIncome).toList();
+    if (_filterDate != null) {
+      list = list.where((t) =>
+          t.date.year == _filterDate!.year &&
+          t.date.month == _filterDate!.month &&
+          t.date.day == _filterDate!.day).toList();
+    }
+    list.sort((a, b) => b.date.compareTo(a.date));
+    return list;
+  }
 
   /// Returns [income, expense] totals per week (4 weeks) for the selected month.
   List<_WeekData> get _weeklyData {
@@ -50,19 +61,29 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   String get _monthLabel =>
       DateFormat('MMM yyyy').format(_selectedMonth);
 
-  void _prevMonth() {
-    setState(() {
-      _selectedMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month - 1);
-    });
+  Future<void> _pickFilterDate() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _filterDate ?? DateTime(_selectedMonth.year, _selectedMonth.month),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.light(primary: AppColors.primaryGreen),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() {
+        _filterDate = picked;
+        // Also sync the month view to the picked date's month
+        _selectedMonth = DateTime(picked.year, picked.month);
+      });
+    }
   }
 
-  void _nextMonth() {
-    setState(() {
-      _selectedMonth =
-          DateTime(_selectedMonth.year, _selectedMonth.month + 1);
-    });
-  }
+  void _clearFilterDate() => setState(() => _filterDate = null);
 
   // ── build ───────────────────────────────────────────────────────────
 
@@ -105,15 +126,18 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       child: Row(
         children: [
           const SizedBox(width: 4),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.12),
-              shape: BoxShape.circle,
+          GestureDetector(
+            onTap: widget.onBack,
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: AppColors.primaryGreen.withOpacity(0.12),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  size: 16, color: AppColors.primaryGreen),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                size: 16, color: AppColors.primaryGreen),
           ),
           const SizedBox(width: 12),
           const Text(
@@ -138,7 +162,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         Expanded(
           child: _SummaryCard(
             label: 'Monthly total Income',
-            value: '\$${fmt.format(_totalIncome)}',
+            value: '₱${fmt.format(_totalIncome)}',
             icon: Icons.attach_money_rounded,
             bgColor: const Color(0xFFE8F5E8),
             iconColor: const Color(0xFF4CAF50),
@@ -150,7 +174,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           child: _SummaryCard(
             label: 'Monthly total expense',
             icon: Icons.money_off_rounded,
-            value: '\$${fmt.format(_totalExpense)}',
+            value: '₱${fmt.format(_totalExpense)}',
             bgColor: const Color(0xFFFFF8E1),
             iconColor: const Color(0xFFE6A800),
             valueColor: const Color(0xFF1A1A1A),
@@ -192,7 +216,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _monthLabel,
+                    _filterDate != null
+                        ? DateFormat('MMM d, yyyy').format(_filterDate!)
+                        : _monthLabel,
                     style: const TextStyle(
                       fontSize: 12,
                       color: Color(0xFF888888),
@@ -202,15 +228,69 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
               Row(
                 children: [
-                  _CalendarChip(label: _monthLabel),
-                  const SizedBox(width: 8),
+                  // Functional calendar chip with clear option
                   GestureDetector(
-                    onTap: _nextMonth,
+                    onTap: _filterDate != null ? _clearFilterDate : _pickFilterDate,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: _filterDate != null
+                            ? AppColors.primaryGreen.withOpacity(0.1)
+                            : const Color(0xFFF5F5F5),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: _filterDate != null
+                              ? AppColors.primaryGreen
+                              : const Color(0xFFE0E0E0),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _filterDate != null
+                                ? DateFormat('MMM d').format(_filterDate!)
+                                : _monthLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: _filterDate != null
+                                  ? AppColors.primaryGreen
+                                  : const Color(0xFF555555),
+                              fontWeight: _filterDate != null
+                                  ? FontWeight.w600
+                                  : FontWeight.w400,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Icon(
+                            _filterDate != null
+                                ? Icons.close_rounded
+                                : Icons.calendar_today_rounded,
+                            size: 12,
+                            color: _filterDate != null
+                                ? AppColors.primaryGreen
+                                : const Color(0xFF888888),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // Arrow navigates to Monthly Calendar view
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(MaterialPageRoute(
+                        builder: (_) => MonthlyCalendarScreen(
+                          transactions: widget.transactions,
+                          initialMonth: _selectedMonth,
+                        ),
+                      ));
+                    },
                     child: Container(
                       width: 30,
                       height: 30,
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryGreen,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF1A1A1A),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(Icons.arrow_forward_rounded,
@@ -294,8 +374,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   String _formatYLabel(double v) {
-    if (v >= 1000) return '\$${(v / 1000).toStringAsFixed(0)}K';
-    return '\$${v.toInt()}';
+    if (v >= 1000) return '₱${(v / 1000).toStringAsFixed(0)}K';
+    return '₱${v.toInt()}';
   }
 
   // ── tabs + transaction list ─────────────────────────────────────────
@@ -452,35 +532,6 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _CalendarChip extends StatelessWidget {
-  final String label;
-  const _CalendarChip({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF5F5F5),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE0E0E0)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: Color(0xFF555555)),
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.calendar_today_rounded,
-              size: 12, color: Color(0xFF888888)),
-        ],
-      ),
-    );
-  }
-}
-
 class _BarGroup extends StatelessWidget {
   final int weekNum;
   final double income;
@@ -592,7 +643,7 @@ class _AnalyticsTxItem extends StatelessWidget {
         isIncome ? const Color(0xFF4CAF50) : const Color(0xFFE53935);
     final bgColor =
         isIncome ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
-    final prefix = isIncome ? '+\$' : '-\$';
+    final prefix = isIncome ? '+₱' : '-₱';
     final fmt = NumberFormat('#,##0');
     final timeStr =
         DateFormat('MMM d, h:mm a').format(transaction.date);
