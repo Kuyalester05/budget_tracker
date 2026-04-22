@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../database/database_helper.dart';
 import '../models/transaction.dart';
 import '../theme/app_colors.dart';
-import '../widgets/set_budget_sheet.dart';
 import '../widgets/transaction_item.dart';
 import 'add_transaction_screen.dart';
 import 'analytics_screen.dart';
@@ -17,10 +17,26 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  double? _budget;
-  final List<Transaction> _transactions = [];
+  List<Transaction> _transactions = [];
   DateTime? _selectedDate;
   int _currentIndex = 0;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadFromDb();
+  }
+
+  Future<void> _loadFromDb() async {
+    final List<Transaction> transactions =
+        await DatabaseHelper.instance.getAllTransactions();
+    if (!mounted) return;
+    setState(() {
+      _transactions = transactions;
+      _isLoading = false;
+    });
+  }
 
   double get _totalIn => _transactions
       .where((t) => t.isIncome)
@@ -46,21 +62,12 @@ class _HomeScreenState extends State<HomeScreen> {
     return 'Good Evening';
   }
 
-  void _addTransaction(Transaction t) {
+  Future<void> _addTransaction(Transaction t) async {
+    await DatabaseHelper.instance.insertTransaction(t);
     setState(() {
       _transactions.insert(0, t);
-      _currentIndex = 0; // go to home tab so budget updates are immediately visible
+      _currentIndex = 0;
     });
-  }
-
-  Future<void> _showSetBudget() async {
-    final result = await showModalBottomSheet<double>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const SetBudgetSheet(),
-    );
-    if (result != null) setState(() => _budget = result);
   }
 
   Future<void> _pickDate() async {
@@ -83,6 +90,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFFF2F4F3),
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.primaryGreen),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: const Color(0xFFF2F4F3),
       body: IndexedStack(
@@ -180,11 +196,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBudgetCard() {
     final fmt = NumberFormat('#,##0.00');
     final netBalance = _totalIn - _totalOut;
-    final remainingBudget =
-        _budget == null ? netBalance : (_budget! + _totalIn - _totalOut);
-    final progress = _budget == null || _budget == 0
-        ? 0.0
-        : (remainingBudget / _budget!).clamp(0.0, 1.0);
 
     return Container(
       margin: const EdgeInsets.only(top: 16),
@@ -196,64 +207,22 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'REMAINING BUDGET',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF888888),
-                  letterSpacing: 1.0,
-                ),
-              ),
-              GestureDetector(
-                onTap: _showSetBudget,
-                child: Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE6A800),
-                    borderRadius: BorderRadius.circular(17),
-                  ),
-                  child: const Icon(Icons.add, color: Colors.white, size: 20),
-                ),
-              ),
-            ],
+          const Text(
+            'REMAINING BALANCE',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF888888),
+              letterSpacing: 1.0,
+            ),
           ),
           const SizedBox(height: 10),
           Text(
-            '₱${fmt.format(remainingBudget)}',
+            '₱${fmt.format(netBalance)}',
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
               color: Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('₱0',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF888888))),
-              Text(
-                _budget == null
-                    ? '₱${fmt.format(netBalance)}'
-                    : 'Remaining: ₱${fmt.format(remainingBudget)}',
-                style:
-                    const TextStyle(fontSize: 12, color: Color(0xFF888888)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: const Color(0xFFE0E0E0),
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFE6A800)),
             ),
           ),
           const SizedBox(height: 16),
