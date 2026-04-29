@@ -9,26 +9,37 @@ class ContinueButton extends StatelessWidget {
   const ContinueButton({
     super.key,
     required this.onPressed,
-    this.label = 'CONTINUE',
+    this.label = 'GET STARTED',
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      height: 54,
-      decoration: BoxDecoration(
-        gradient: AppColors.buttonGradient,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(12),
-          child: Center(
-            child: Text(label, style: AppTextStyles.buttonText),
+      height: 58,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppColors.buttonGradient,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryGreen.withOpacity(0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: ElevatedButton(
+          onPressed: onPressed,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
           ),
+          child: Text(label, style: AppTextStyles.buttonText),
         ),
       ),
     );

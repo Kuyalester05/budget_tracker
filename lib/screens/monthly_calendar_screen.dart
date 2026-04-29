@@ -25,20 +25,24 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
   @override
   void initState() {
     super.initState();
-    _currentMonth = DateTime(widget.initialMonth.year, widget.initialMonth.month);
+    _currentMonth =
+        DateTime(widget.initialMonth.year, widget.initialMonth.month);
     _selectedDate = DateTime.now();
   }
 
-  // ── helpers ──────────────────────────────────────────────────────────
+  List<Transaction> get _monthTx => widget.transactions
+      .where((t) =>
+          t.date.year == _currentMonth.year &&
+          t.date.month == _currentMonth.month)
+      .toList();
 
-  List<Transaction> get _monthTx => widget.transactions.where((t) =>
-      t.date.year == _currentMonth.year &&
-      t.date.month == _currentMonth.month).toList();
-
-  List<Transaction> _txForDate(DateTime date) => widget.transactions.where((t) =>
-      t.date.year == date.year &&
-      t.date.month == date.month &&
-      t.date.day == date.day).toList();
+  List<Transaction> _txForDate(DateTime date) =>
+      widget.transactions
+          .where((t) =>
+              t.date.year == date.year &&
+              t.date.month == date.month &&
+              t.date.day == date.day)
+          .toList();
 
   double _incomeForDate(DateTime date) =>
       _txForDate(date).where((t) => t.isIncome).fold(0, (s, t) => s + t.amount);
@@ -63,32 +67,28 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
   bool _hasTransactions(DateTime date) => _txForDate(date).isNotEmpty;
 
   String get _monthRangeLabel {
-    final start = DateFormat('MMM dd').format(
-        DateTime(_currentMonth.year, _currentMonth.month, 1));
-    final end = DateFormat('MMM dd').format(
-        DateTime(_currentMonth.year, _currentMonth.month + 1, 0));
-    return '$start - $end';
+    final start = DateFormat('MMM dd')
+        .format(DateTime(_currentMonth.year, _currentMonth.month, 1));
+    final end = DateFormat('MMM dd')
+        .format(DateTime(_currentMonth.year, _currentMonth.month + 1, 0));
+    return '$start – $end';
   }
 
   void _prevMonth() => setState(() {
-        _currentMonth =
-            DateTime(_currentMonth.year, _currentMonth.month - 1);
+        _currentMonth = DateTime(_currentMonth.year, _currentMonth.month - 1);
         _selectedDate = null;
       });
 
   void _nextMonth() => setState(() {
-        _currentMonth =
-            DateTime(_currentMonth.year, _currentMonth.month + 1);
+        _currentMonth = DateTime(_currentMonth.year, _currentMonth.month + 1);
         _selectedDate = null;
       });
-
-  // ── build ─────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final fmt = NumberFormat('#,##0');
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F5),
+      backgroundColor: AppColors.offWhite,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,15 +96,15 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
             _buildTopBar(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
                     _buildSummaryCards(fmt),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     _buildCalendarCard(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     _buildTabsAndList(),
                   ],
                 ),
@@ -116,34 +116,33 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
     );
   }
 
-  // ── top bar ───────────────────────────────────────────────────────────
-
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 10),
       child: Row(
         children: [
-          const SizedBox(width: 4),
           GestureDetector(
             onTap: () => Navigator.of(context).pop(),
             child: Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.12),
-                shape: BoxShape.circle,
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: AppColors.cardShadow,
               ),
               child: const Icon(Icons.arrow_back_ios_new_rounded,
                   size: 16, color: AppColors.primaryGreen),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           const Text(
-            'Analytics',
+            'Monthly Calendar',
             style: TextStyle(
               fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A1A),
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+              letterSpacing: -0.4,
             ),
           ),
         ],
@@ -151,92 +150,106 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
     );
   }
 
-  // ── summary cards ─────────────────────────────────────────────────────
-
   Widget _buildSummaryCards(NumberFormat fmt) {
     return Row(
       children: [
         Expanded(
           child: _SummaryCard(
-            label: 'Daily total Income',
+            label: 'Daily Income',
             value: '₱${fmt.format(_selectedIncome)}',
-            icon: Icons.attach_money_rounded,
-            bgColor: const Color(0xFFE8F5E8),
-            iconColor: const Color(0xFF4CAF50),
+            icon: Icons.south_rounded,
+            gradient: AppColors.incomeGradient,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _SummaryCard(
-            label: 'Daily total expense',
+            label: 'Daily Expense',
             value: '₱${fmt.format(_selectedExpense)}',
-            icon: Icons.money_off_rounded,
-            bgColor: const Color(0xFFFFF8E1),
-            iconColor: const Color(0xFFE6A800),
+            icon: Icons.north_rounded,
+            gradient: AppColors.expenseGradient,
           ),
         ),
       ],
     );
   }
 
-  // ── calendar card ─────────────────────────────────────────────────────
-
   Widget _buildCalendarCard() {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Statistics title + month range
-          const Text(
-            'Statistics',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A1A),
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            _monthRangeLabel,
-            style: const TextStyle(fontSize: 12, color: Color(0xFF888888)),
-          ),
-          const SizedBox(height: 16),
-
-          // Month navigation
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              GestureDetector(
-                onTap: _prevMonth,
-                child: Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: AppColors.primaryGreen.withOpacity(0.12),
-                    shape: BoxShape.circle,
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Statistics',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textDark,
+                      letterSpacing: -0.3,
+                    ),
                   ),
-                  child: const Icon(Icons.arrow_back_ios_new_rounded,
-                      size: 14, color: AppColors.primaryGreen),
-                ),
+                  const SizedBox(height: 2),
+                  Text(_monthRangeLabel,
+                      style: const TextStyle(
+                          fontSize: 12, color: AppColors.textGrey)),
+                ],
               ),
-              const SizedBox(width: 12),
-              Text(
-                DateFormat('MMMM yyyy').format(_currentMonth),
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF1A1A1A),
-                ),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: _prevMonth,
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.offWhite,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded,
+                          size: 13, color: AppColors.primaryGreen),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Text(
+                      DateFormat('MMMM yyyy').format(_currentMonth),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: _nextMonth,
+                    child: Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: AppColors.offWhite,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.arrow_forward_ios_rounded,
+                          size: 13, color: AppColors.primaryGreen),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
-
-          // Calendar grid
+          const SizedBox(height: 18),
           _buildCalendarGrid(),
         ],
       ),
@@ -244,51 +257,37 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
   }
 
   Widget _buildCalendarGrid() {
-    final daysOfWeek = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-
-    // First day of month and total days
+    final daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     final firstDay = DateTime(_currentMonth.year, _currentMonth.month, 1);
     final daysInMonth =
         DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
-    final startWeekday = firstDay.weekday % 7; // 0=Sun, 6=Sat
-
-    // Previous month fill days
+    final startWeekday = firstDay.weekday % 7;
     final prevMonthDays =
         DateTime(_currentMonth.year, _currentMonth.month, 0).day;
 
     return Column(
       children: [
-        // Day headers
         Row(
           children: daysOfWeek.map((d) {
-            final isSun = d == 'Su';
-            final isSat = d == 'Sa';
             return Expanded(
-              child: Container(
-                height: 36,
-                decoration: BoxDecoration(
-                  color: AppColors.primaryGreen,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Center(
-                  child: Text(
-                    d,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.white,
-                    ),
+              child: Center(
+                child: Text(
+                  d,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textGrey,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ),
             );
           }).toList(),
         ),
-        const SizedBox(height: 4),
-
-        // Day cells
-        ..._buildWeekRows(
-            startWeekday, daysInMonth, prevMonthDays),
+        const SizedBox(height: 8),
+        const Divider(height: 1, color: AppColors.divider),
+        const SizedBox(height: 8),
+        ..._buildWeekRows(startWeekday, daysInMonth, prevMonthDays),
       ],
     );
   }
@@ -297,7 +296,6 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
       int startWeekday, int daysInMonth, int prevMonthDays) {
     final cells = <_DayCell>[];
 
-    // Fill leading days from previous month
     for (int i = startWeekday - 1; i >= 0; i--) {
       cells.add(_DayCell(
         day: prevMonthDays - i,
@@ -307,10 +305,8 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
       ));
     }
 
-    // Current month days
     for (int d = 1; d <= daysInMonth; d++) {
-      final date =
-          DateTime(_currentMonth.year, _currentMonth.month, d);
+      final date = DateTime(_currentMonth.year, _currentMonth.month, d);
       cells.add(_DayCell(
         day: d,
         isCurrentMonth: true,
@@ -324,32 +320,32 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
       ));
     }
 
-    // Fill trailing days from next month
     final remainder = (7 - (cells.length % 7)) % 7;
     for (int d = 1; d <= remainder; d++) {
       cells.add(_DayCell(
         day: d,
         isCurrentMonth: false,
-        date: DateTime(
-            _currentMonth.year, _currentMonth.month + 1, d),
+        date: DateTime(_currentMonth.year, _currentMonth.month + 1, d),
       ));
     }
 
-    // Split into weeks
     final rows = <Widget>[];
     for (int i = 0; i < cells.length; i += 7) {
       final week = cells.sublist(i, i + 7);
-      rows.add(Row(
-        children: week.map((cell) {
-          return Expanded(
-            child: GestureDetector(
-              onTap: cell.isCurrentMonth
-                  ? () => setState(() => _selectedDate = cell.date)
-                  : null,
-              child: _buildDayCell(cell),
-            ),
-          );
-        }).toList(),
+      rows.add(Padding(
+        padding: const EdgeInsets.only(bottom: 4),
+        child: Row(
+          children: week.map((cell) {
+            return Expanded(
+              child: GestureDetector(
+                onTap: cell.isCurrentMonth
+                    ? () => setState(() => _selectedDate = cell.date)
+                    : null,
+                child: _buildDayCell(cell),
+              ),
+            );
+          }).toList(),
+        ),
       ));
     }
     return rows;
@@ -365,24 +361,24 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
   Widget _buildDayCell(_DayCell cell) {
     Color textColor;
     Color bgColor = Colors.transparent;
-    FontWeight fontWeight = FontWeight.w400;
+    FontWeight fontWeight = FontWeight.w500;
 
     if (!cell.isCurrentMonth) {
-      textColor = const Color(0xFFCCCCCC);
+      textColor = AppColors.textLight;
     } else if (cell.isSelected) {
       bgColor = AppColors.primaryGreen;
       textColor = Colors.white;
-      fontWeight = FontWeight.w700;
+      fontWeight = FontWeight.w800;
     } else if (cell.isToday) {
       bgColor = Colors.transparent;
       textColor = AppColors.primaryGreen;
-      fontWeight = FontWeight.w700;
+      fontWeight = FontWeight.w800;
     } else {
-      textColor = const Color(0xFF1A1A1A);
+      textColor = AppColors.textDark;
     }
 
     return Container(
-      height: 44,
+      height: 46,
       margin: const EdgeInsets.all(1),
       decoration: BoxDecoration(
         color: bgColor,
@@ -402,16 +398,15 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
               color: textColor,
             ),
           ),
-          // Dot indicator for dates with transactions
           if (cell.isCurrentMonth && cell.hasTransactions && !cell.isSelected)
             Container(
-              width: 4,
-              height: 4,
-              margin: const EdgeInsets.only(top: 2),
+              width: 5,
+              height: 5,
+              margin: const EdgeInsets.only(top: 1),
               decoration: BoxDecoration(
                 color: cell.isToday
                     ? AppColors.primaryGreen
-                    : const Color(0xFFE6A800),
+                    : AppColors.goldPrimary,
                 shape: BoxShape.circle,
               ),
             ),
@@ -420,13 +415,11 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
     );
   }
 
-  // ── tabs + list ───────────────────────────────────────────────────────
-
   Widget _buildTabsAndList() {
     return Column(
       children: [
         _buildTabs(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _buildTransactionList(),
       ],
     );
@@ -435,28 +428,27 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
   Widget _buildTabs() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(50),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppColors.cardShadow,
       ),
       padding: const EdgeInsets.all(4),
       child: Row(
         children: [
           Expanded(
-            child: _TabButton(
-              label: 'Income',
-              isActive: _showIncome,
-              activeColor: AppColors.primaryGreen,
-              onTap: () => setState(() => _showIncome = true),
-            ),
-          ),
+              child: _TabButton(
+            label: 'Income',
+            isActive: _showIncome,
+            activeColor: AppColors.primaryGreen,
+            onTap: () => setState(() => _showIncome = true),
+          )),
           Expanded(
-            child: _TabButton(
-              label: 'Expenses',
-              isActive: !_showIncome,
-              activeColor: const Color(0xFFE6A800),
-              onTap: () => setState(() => _showIncome = false),
-            ),
-          ),
+              child: _TabButton(
+            label: 'Expenses',
+            isActive: !_showIncome,
+            activeColor: AppColors.goldDeep,
+            onTap: () => setState(() => _showIncome = false),
+          )),
         ],
       ),
     );
@@ -466,7 +458,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
     final list = _filteredList;
 
     if (_selectedDate == null) {
-      return _emptyState('Tap a date to view transactions');
+      return _emptyState('Tap a date to see transactions');
     }
 
     if (list.isEmpty) {
@@ -476,15 +468,16 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.cardShadow,
       ),
       child: ListView.separated(
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemCount: list.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 1, indent: 72, color: Color(0xFFF0F0F0)),
+            const Divider(height: 1, indent: 74, color: AppColors.divider),
         itemBuilder: (_, i) => _TxItem(transaction: list[i]),
       ),
     );
@@ -492,19 +485,27 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
 
   Widget _emptyState(String message) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 36),
+      padding: const EdgeInsets.symmetric(vertical: 40),
       alignment: Alignment.center,
       child: Column(
         children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 44, color: Colors.grey.shade300),
-          const SizedBox(height: 10),
+          Container(
+            width: 60,
+            height: 60,
+            decoration: BoxDecoration(
+              color: AppColors.surfaceAlt,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.receipt_long_outlined,
+                size: 28, color: AppColors.textLight),
+          ),
+          const SizedBox(height: 12),
           Text(
             message,
             style: const TextStyle(
               fontSize: 13,
-              color: Color(0xFF888888),
-              fontWeight: FontWeight.w500,
+              color: AppColors.textGrey,
+              fontWeight: FontWeight.w600,
             ),
             textAlign: TextAlign.center,
           ),
@@ -514,7 +515,7 @@ class _MonthlyCalendarScreenState extends State<MonthlyCalendarScreen> {
   }
 }
 
-// ── data model ────────────────────────────────────────────────────────────────
+// ── Data Models ───────────────────────────────────────────────────────────────
 
 class _DayCell {
   final int day;
@@ -534,67 +535,61 @@ class _DayCell {
   });
 }
 
-// ── subwidgets ────────────────────────────────────────────────────────────────
+// ── Subwidgets ────────────────────────────────────────────────────────────────
 
 class _SummaryCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  final Color bgColor;
-  final Color iconColor;
+  final LinearGradient gradient;
 
   const _SummaryCard({
     required this.label,
     required this.value,
     required this.icon,
-    required this.bgColor,
-    required this.iconColor,
+    required this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: Color(0xFF888888),
-              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.8),
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 18, color: iconColor),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: Color(0xFF1A1A1A),
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -621,18 +616,18 @@ class _TabButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 13),
         decoration: BoxDecoration(
           color: isActive ? activeColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(50),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: isActive ? Colors.white : const Color(0xFF888888),
+              color: isActive ? Colors.white : AppColors.textGrey,
             ),
           ),
         ),
@@ -648,10 +643,9 @@ class _TxItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.isIncome;
-    final color =
-        isIncome ? const Color(0xFF4CAF50) : const Color(0xFFE53935);
+    final color = isIncome ? AppColors.incomeGreen : AppColors.expenseRed;
     final bgColor =
-        isIncome ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+        isIncome ? const Color(0xFFE8F7EE) : const Color(0xFFFFEBEA);
     final prefix = isIncome ? '+₱' : '-₱';
     final fmt = NumberFormat('#,##0');
     final timeStr = DateFormat('MMM d, h:mm a').format(transaction.date);
@@ -661,11 +655,11 @@ class _TxItem extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
               child: Text(transaction.category.emoji,
@@ -682,24 +676,23 @@ class _TxItem extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.textDark,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  timeStr,
-                  style: const TextStyle(
-                      fontSize: 11, color: Color(0xFF888888)),
-                ),
+                const SizedBox(height: 3),
+                Text(timeStr,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textGrey)),
               ],
             ),
           ),
           Text(
             '$prefix${fmt.format(transaction.amount)}',
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
               color: color,
+              letterSpacing: -0.3,
             ),
           ),
         ],

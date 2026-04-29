@@ -32,9 +32,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.dispose();
   }
 
-  void _addQuickAmount(double val) {
-    setState(() => _amount += val);
-  }
+  void _addQuickAmount(double val) => setState(() => _amount += val);
 
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
@@ -44,7 +42,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       lastDate: DateTime(2100),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.primaryGreen),
+          colorScheme:
+              const ColorScheme.light(primary: AppColors.primaryGreen),
         ),
         child: child!,
       ),
@@ -54,26 +53,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Future<void> _save() async {
     if (_amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter an amount greater than ₱0.')),
-      );
+      _showSnack('Please enter an amount greater than ₱0.', isError: true);
       return;
     }
     if (_date == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a date.')),
-      );
+      _showSnack('Please select a date.', isError: true);
       return;
     }
     final now = DateTime.now();
-    // Combine the user-picked date with the exact current time of saving
     final transactionDate = DateTime(
-      _date!.year,
-      _date!.month,
-      _date!.day,
-      now.hour,
-      now.minute,
-      now.second,
+      _date!.year, _date!.month, _date!.day,
+      now.hour, now.minute, now.second,
     );
     final desc = _descController.text.trim();
     final transaction = Transaction(
@@ -85,7 +75,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       date: transactionDate,
     );
     await widget.onAdd(transaction);
-    // Reset form
     setState(() {
       _amount = 0;
       _date = null;
@@ -94,10 +83,17 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _type = TransactionType.income;
     });
     if (!mounted) return;
+    _showSnack('Transaction saved!', isError: false);
+  }
+
+  void _showSnack(String msg, {required bool isError}) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Transaction saved!'),
-        backgroundColor: AppColors.primaryGreen,
+      SnackBar(
+        content: Text(msg),
+        backgroundColor:
+            isError ? AppColors.expenseRed : AppColors.primaryGreen,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
   }
@@ -105,36 +101,38 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: AppColors.offWhite,
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 0, 18, 24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildTopBar(),
+              const SizedBox(height: 20),
+              _buildTypeToggle(),
+              const SizedBox(height: 22),
+              _buildAmountCard(),
+              const SizedBox(height: 18),
+              _buildSectionCard(
+                child: _buildCategorySection(),
+              ),
+              const SizedBox(height: 18),
+              _buildSectionCard(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _buildTopBar(),
-                    const SizedBox(height: 16),
-                    _buildTypeToggle(),
-                    const SizedBox(height: 20),
-                    _buildAmountSection(),
-                    const SizedBox(height: 20),
-                    _buildCategorySection(),
-                    const SizedBox(height: 20),
                     _buildDateSection(),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 18),
                     _buildDescriptionSection(),
-                    const SizedBox(height: 24),
-                    _buildSaveButton(),
-                    const SizedBox(height: 28),
-                    _buildRecentSection(),
                   ],
                 ),
               ),
-            ),
-          ],
+              const SizedBox(height: 22),
+              _buildSaveButton(),
+              const SizedBox(height: 28),
+              _buildRecentSection(),
+            ],
+          ),
         ),
       ),
     );
@@ -142,16 +140,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _buildTopBar() {
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: 20),
       child: Row(
         children: [
-          const SizedBox(width: 4),
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(13),
+            ),
+            child: const Icon(Icons.add_rounded,
+                color: AppColors.primaryGreen, size: 22),
+          ),
+          const SizedBox(width: 12),
           const Text(
             'Add Transaction',
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 20,
               fontWeight: FontWeight.w800,
-              color: AppColors.primaryGreen,
+              color: AppColors.textDark,
+              letterSpacing: -0.3,
             ),
           ),
         ],
@@ -159,44 +168,68 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  Widget _buildSectionCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.cardShadow,
+      ),
+      child: child,
+    );
+  }
+
   Widget _buildTypeToggle() {
     return Row(
       children: [
-        Expanded(child: _typeButton('Add Income', '💰', TransactionType.income,
-            const Color(0xFFD6F5D6), const Color(0xFF2E7D32))),
+        Expanded(
+            child: _typeButton(
+          'Income',
+          '💰',
+          TransactionType.income,
+          AppColors.incomeGradient,
+          const Color(0xFFE8F7EE),
+        )),
         const SizedBox(width: 12),
-        Expanded(child: _typeButton('Add Expense', '💸', TransactionType.expense,
-            const Color(0xFFFFF3CD), const Color(0xFFB8860B))),
+        Expanded(
+            child: _typeButton(
+          'Expense',
+          '💸',
+          TransactionType.expense,
+          AppColors.expenseGradient,
+          const Color(0xFFFFF8E0),
+        )),
       ],
     );
   }
 
   Widget _typeButton(String label, String emoji, TransactionType type,
-      Color bg, Color activeOutline) {
+      LinearGradient activeGradient, Color inactiveBg) {
     final isSelected = _type == type;
     return GestureDetector(
       onTap: () => setState(() => _type = type),
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
-          color: isSelected ? bg : Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? activeOutline : const Color(0xFFE0E0E0),
-            width: isSelected ? 2 : 1,
-          ),
+          gradient: isSelected ? activeGradient : null,
+          color: isSelected ? null : AppColors.white,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: isSelected ? AppColors.floatingShadow : AppColors.cardShadow,
         ),
         child: Column(
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 28)),
-            const SizedBox(height: 6),
+            Text(emoji, style: const TextStyle(fontSize: 30)),
+            const SizedBox(height: 8),
             Text(
-              label,
+              'Add $label',
               style: TextStyle(
                 fontSize: 13,
-                fontWeight: FontWeight.w700,
-                color: isSelected ? activeOutline : const Color(0xFF888888),
+                fontWeight: FontWeight.w800,
+                color: isSelected ? Colors.white : AppColors.textGrey,
+                letterSpacing: 0.2,
               ),
             ),
           ],
@@ -205,85 +238,95 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  Widget _buildAmountSection() {
+  Widget _buildAmountCard() {
     final fmt = NumberFormat('#,##0.00');
-    return Column(
-      children: [
-        const Text(
-          'AMOUNT',
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF888888),
-            letterSpacing: 1.5,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            GestureDetector(
-              onTap: _showAmountDialog,
-              child: Text(
-                _amount == 0 ? 'Enter amount here' : '₱${fmt.format(_amount)}',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  color: _amount == 0 ? const Color(0xFFCCCCCC) : const Color(0xFF1A1A1A),
-                ),
-              ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: AppColors.headerGradient,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: AppColors.floatingShadow,
+      ),
+      child: Column(
+        children: [
+          const Text(
+            'AMOUNT',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: Colors.white54,
+              letterSpacing: 2.0,
             ),
-            if (_amount > 0) ...[
-              const SizedBox(width: 10),
-              GestureDetector(
-                onTap: () => setState(() => _amount = 0),
-                child: Container(
-                  width: 26,
-                  height: 26,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEEEEEE),
-                    shape: BoxShape.circle,
+          ),
+          const SizedBox(height: 10),
+          GestureDetector(
+            onTap: _showAmountDialog,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  _amount == 0 ? 'Tap to enter' : '₱${fmt.format(_amount)}',
+                  style: TextStyle(
+                    fontSize: _amount == 0 ? 20 : 38,
+                    fontWeight: FontWeight.w900,
+                    color: _amount == 0
+                        ? Colors.white38
+                        : AppColors.goldLight,
+                    letterSpacing: -1.5,
                   ),
-                  child: const Icon(Icons.close_rounded,
-                      size: 15, color: Color(0xFF666666)),
                 ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 16),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: _quickAmounts.map((val) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: GestureDetector(
-                  onTap: () => _addQuickAmount(val),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFDDDDDD)),
-                    ),
-                    child: Text(
-                      '+₱${val.toInt()}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF333333),
+                if (_amount > 0) ...[
+                  const SizedBox(width: 12),
+                  GestureDetector(
+                    onTap: () => setState(() => _amount = 0),
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
                       ),
+                      child: const Icon(Icons.close_rounded,
+                          size: 14, color: Colors.white70),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+          // Quick amount chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: _quickAmounts.map((val) {
+              return GestureDetector(
+                onTap: () => _addQuickAmount(val),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                        color: Colors.white.withOpacity(0.2)),
+                  ),
+                  child: Text(
+                    '+₱${val.toInt()}',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
                     ),
                   ),
                 ),
               );
             }).toList(),
           ),
-        ),
-        const SizedBox(height: 12),
-        const Divider(color: Color(0xFFEEEEEE)),
-      ],
+        ],
+      ),
     );
   }
 
@@ -293,19 +336,35 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Enter Amount'),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text('Enter Amount',
+            style: TextStyle(fontWeight: FontWeight.w800)),
         content: TextField(
           controller: ctrl,
           autofocus: true,
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(prefixText: '₱ ', hintText: '0.00'),
+          decoration: InputDecoration(
+            prefixText: '₱ ',
+            hintText: '0.00',
+            filled: true,
+            fillColor: AppColors.offWhite,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide.none,
+            ),
+          ),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primaryGreen,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10)),
+            ),
             onPressed: () {
               final val = double.tryParse(ctrl.text);
               if (val != null && val >= 0) setState(() => _amount = val);
@@ -323,62 +382,47 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Category',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1A),
-          ),
-        ),
-        const SizedBox(height: 12),
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            children: categories.map((cat) {
-              final isSelected = _category == cat;
-              return Padding(
-                padding: const EdgeInsets.only(right: 10),
-                child: GestureDetector(
-                  onTap: () => setState(() => _category = cat),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 180),
-                    width: 72,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFFFFE082)
-                          : const Color(0xFFFFF8E1),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFFE6A800)
-                            : Colors.transparent,
-                        width: 2,
+        const Text('Category',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textDark,
+            )),
+        const SizedBox(height: 14),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: categories.map((cat) {
+            final isSelected = _category == cat;
+            return GestureDetector(
+              onTap: () => setState(() => _category = cat),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                width: 72,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  gradient: isSelected ? AppColors.buttonGradient : null,
+                  color: isSelected ? null : AppColors.surfaceAlt,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: isSelected ? AppColors.cardShadow : null,
+                ),
+                child: Column(
+                  children: [
+                    Text(cat.emoji, style: const TextStyle(fontSize: 24)),
+                    const SizedBox(height: 6),
+                    Text(
+                      cat.label,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        color: isSelected ? Colors.white : AppColors.textGrey,
                       ),
                     ),
-                    child: Column(
-                      children: [
-                        Text(cat.emoji,
-                            style: const TextStyle(fontSize: 24)),
-                        const SizedBox(height: 6),
-                        Text(
-                          cat.label,
-                          style: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: isSelected
-                                ? const Color(0xFF7A5000)
-                                : const Color(0xFF888888),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              );
-            }).toList(),
-          ),
+              ),
+            );
+          }).toList(),
         ),
       ],
     );
@@ -388,24 +432,27 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Date',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1A),
-          ),
-        ),
+        const Text('Date',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textDark,
+            )),
         const SizedBox(height: 10),
         GestureDetector(
           onTap: _pickDate,
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFE0E0E0)),
+              color: AppColors.offWhite,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: _date != null
+                    ? AppColors.primaryGreen
+                    : AppColors.cardBorder,
+                width: _date != null ? 1.5 : 1,
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -413,17 +460,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Text(
                   _date == null
                       ? 'Select a date'
-                      : DateFormat('MMM d, yyyy').format(_date!),
+                      : DateFormat('EEEE, MMM d, yyyy').format(_date!),
                   style: TextStyle(
                     fontSize: 14,
                     color: _date == null
-                        ? const Color(0xFFAAAAAA)
-                        : const Color(0xFF1A1A1A),
-                    fontWeight: _date != null ? FontWeight.w600 : FontWeight.w400,
+                        ? AppColors.textLight
+                        : AppColors.textDark,
+                    fontWeight:
+                        _date != null ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
-                const Icon(Icons.calendar_month_rounded,
-                    color: Color(0xFF888888), size: 20),
+                Icon(Icons.calendar_month_rounded,
+                    color: _date != null
+                        ? AppColors.primaryGreen
+                        : AppColors.textLight,
+                    size: 20),
               ],
             ),
           ),
@@ -436,34 +487,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Description',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: Color(0xFF1A1A1A),
-          ),
-        ),
+        const Text('Description',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: AppColors.textDark,
+            )),
         const SizedBox(height: 10),
         TextField(
           controller: _descController,
-          style: const TextStyle(fontSize: 14, color: Color(0xFF1A1A1A)),
+          style: const TextStyle(
+              fontSize: 14,
+              color: AppColors.textDark,
+              fontWeight: FontWeight.w500),
           decoration: InputDecoration(
-            hintText: 'e.g Monthly Salary',
-            hintStyle: const TextStyle(color: Color(0xFFAAAAAA)),
+            hintText: 'e.g. Monthly Salary',
+            hintStyle: const TextStyle(color: AppColors.textLight),
             contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 15),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: const BorderSide(color: Color(0xFFE0E0E0)),
+              borderRadius: BorderRadius.circular(14),
+              borderSide:
+                  const BorderSide(color: AppColors.cardBorder),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
               borderSide:
                   const BorderSide(color: AppColors.primaryGreen, width: 1.5),
             ),
             filled: true,
-            fillColor: Colors.white,
+            fillColor: AppColors.offWhite,
           ),
         ),
       ],
@@ -473,23 +526,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _buildSaveButton() {
     return SizedBox(
       width: double.infinity,
-      height: 56,
-      child: ElevatedButton(
-        onPressed: _save,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primaryGreen,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+      height: 58,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: AppColors.buttonGradient,
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.primaryGreen.withOpacity(0.35),
+              blurRadius: 18,
+              offset: const Offset(0, 6),
+            ),
+          ],
         ),
-        child: const Text(
-          'Save Transaction',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.5,
+        child: ElevatedButton(
+          onPressed: _save,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.transparent,
+            shadowColor: Colors.transparent,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
+          ),
+          child: const Text(
+            'Save Transaction',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
+            ),
           ),
         ),
       ),
@@ -498,57 +564,56 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _buildRecentSection() {
     final recent = widget.recentTransactions.take(5).toList();
+    if (recent.isEmpty) return const SizedBox.shrink();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: const [
-            Text(
-              'Recent',
-              style: TextStyle(
-                fontSize: 15,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFF1A1A1A),
-              ),
-            ),
-            Text(
-              'See all',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppColors.primaryGreen,
-              ),
-            ),
+            Text('Recent',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textDark,
+                  letterSpacing: -0.2,
+                )),
+            Text('See all',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.primaryGreen,
+                )),
           ],
         ),
-        const SizedBox(height: 12),
-        if (recent.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Center(
-              child: Text(
-                'No recent transactions',
-                style: TextStyle(fontSize: 13, color: Color(0xFFAAAAAA)),
-              ),
-            ),
-          )
-        else
-          ...recent.map((t) => _buildRecentItem(t)),
+        const SizedBox(height: 14),
+        Container(
+          decoration: BoxDecoration(
+            color: AppColors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: AppColors.cardShadow,
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Column(
+            children: recent.map((t) => _buildRecentItem(t)).toList(),
+          ),
+        ),
       ],
     );
   }
 
   Widget _buildRecentItem(Transaction t) {
     final isIncome = t.isIncome;
-    final color = isIncome ? const Color(0xFF4CAF50) : const Color(0xFFE53935);
-    final bgColor = isIncome ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+    final color =
+        isIncome ? AppColors.incomeGreen : AppColors.expenseRed;
+    final bgColor =
+        isIncome ? const Color(0xFFE8F7EE) : const Color(0xFFFFEBEA);
     final prefix = isIncome ? '+₱' : '-₱';
     final timeStr = DateFormat('MMM d, h:mm a').format(t.date);
     final fmt = NumberFormat('#,##0');
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         children: [
           Container(
@@ -556,25 +621,35 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             height: 44,
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(13),
             ),
             child: Center(
-              child: Text(t.category.emoji,
-                  style: const TextStyle(fontSize: 20)),
+              child:
+                  Text(t.category.emoji, style: const TextStyle(fontSize: 20)),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              timeStr,
-              style: const TextStyle(fontSize: 13, color: Color(0xFF888888)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(t.title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textDark,
+                    )),
+                Text(timeStr,
+                    style: const TextStyle(
+                        fontSize: 11, color: AppColors.textGrey)),
+              ],
             ),
           ),
           Text(
             '$prefix${fmt.format(t.amount)}',
             style: TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: color,
             ),
           ),

@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
-import '../theme/app_text_styles.dart';
 
 class BursaLogo extends StatelessWidget {
   final double size;
-
   const BursaLogo({super.key, this.size = 100});
 
   @override
@@ -12,19 +10,37 @@ class BursaLogo extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         shape: BoxShape.circle,
-        gradient: AppColors.logoGradient,
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF2E7D52), Color(0xFF0B1F0E)],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryGreen.withOpacity(0.35),
+            blurRadius: 28,
+            offset: const Offset(0, 8),
+            spreadRadius: 2,
+          ),
+        ],
       ),
       child: Center(
         child: RichText(
           text: TextSpan(
-            style: AppTextStyles.logoText,
+            style: TextStyle(
+              fontSize: size * 0.28,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Poppins',
+              color: Colors.white,
+              letterSpacing: 1.5,
+            ),
             children: const [
               TextSpan(text: 'BUR'),
               TextSpan(
                 text: '\$',
-                style: TextStyle(color: AppColors.dollarYellow),
+                style: TextStyle(color: Color(0xFFE6B020)),
               ),
               TextSpan(text: 'A'),
             ],

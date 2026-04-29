@@ -5,11 +5,14 @@ class AppTheme {
   AppTheme._();
 
   static ThemeData get theme => ThemeData(
-        scaffoldBackgroundColor: AppColors.darkGreen,
+        scaffoldBackgroundColor: AppColors.offWhite,
         fontFamily: 'Poppins',
-        colorScheme: const ColorScheme.dark(
+        colorScheme: const ColorScheme.light(
           primary: AppColors.primaryGreen,
-          surface: AppColors.darkGreen,
+          surface: AppColors.surface,
         ),
+        splashFactory: NoSplash.splashFactory,
+        highlightColor: Colors.transparent,
+        splashColor: Colors.transparent,
       );
 }

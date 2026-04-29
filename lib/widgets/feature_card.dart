@@ -11,18 +11,27 @@ class FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
       decoration: BoxDecoration(
         color: AppColors.white,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         border: Border.all(color: AppColors.cardBorder, width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primaryGreen.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _buildIconBox(),
-          const SizedBox(width: 14),
+          const SizedBox(width: 16),
           Expanded(child: _buildTextContent()),
+          const Icon(Icons.arrow_forward_ios_rounded,
+              size: 13, color: AppColors.textLight),
         ],
       ),
     );
@@ -30,17 +39,13 @@ class FeatureCard extends StatelessWidget {
 
   Widget _buildIconBox() {
     return Container(
-      width: 48,
-      height: 48,
+      width: 50,
+      height: 50,
       decoration: BoxDecoration(
         gradient: AppColors.iconBgGradient,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
       ),
-      child: Icon(
-        feature.icon,
-        color: AppColors.primaryGreen,
-        size: 24,
-      ),
+      child: Icon(feature.icon, color: AppColors.primaryGreen, size: 24),
     );
   }
 

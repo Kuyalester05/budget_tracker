@@ -17,9 +17,7 @@ class AnalyticsScreen extends StatefulWidget {
 class _AnalyticsScreenState extends State<AnalyticsScreen> {
   bool _showIncome = true;
   DateTime _selectedMonth = DateTime.now();
-  DateTime? _filterDate; // specific date filter for list
-
-  // ── helpers ────────────────────────────────────────────────────────
+  DateTime? _filterDate;
 
   List<Transaction> get _monthTx => widget.transactions.where((t) {
         return t.date.year == _selectedMonth.year &&
@@ -35,16 +33,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   List<Transaction> get _filtered {
     var list = _monthTx.where((t) => t.isIncome == _showIncome).toList();
     if (_filterDate != null) {
-      list = list.where((t) =>
-          t.date.year == _filterDate!.year &&
-          t.date.month == _filterDate!.month &&
-          t.date.day == _filterDate!.day).toList();
+      list = list
+          .where((t) =>
+              t.date.year == _filterDate!.year &&
+              t.date.month == _filterDate!.month &&
+              t.date.day == _filterDate!.day)
+          .toList();
     }
     list.sort((a, b) => b.date.compareTo(a.date));
     return list;
   }
 
-  /// Returns [income, expense] totals per week (4 weeks) for the selected month.
   List<_WeekData> get _weeklyData {
     final weeks = List.generate(4, (_) => _WeekData());
     for (final t in _monthTx) {
@@ -58,18 +57,19 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return weeks;
   }
 
-  String get _monthLabel =>
-      DateFormat('MMM yyyy').format(_selectedMonth);
+  String get _monthLabel => DateFormat('MMM yyyy').format(_selectedMonth);
 
   Future<void> _pickFilterDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _filterDate ?? DateTime(_selectedMonth.year, _selectedMonth.month),
+      initialDate: _filterDate ??
+          DateTime(_selectedMonth.year, _selectedMonth.month),
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(primary: AppColors.primaryGreen),
+          colorScheme:
+              const ColorScheme.light(primary: AppColors.primaryGreen),
         ),
         child: child!,
       ),
@@ -77,7 +77,6 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     if (picked != null) {
       setState(() {
         _filterDate = picked;
-        // Also sync the month view to the picked date's month
         _selectedMonth = DateTime(picked.year, picked.month);
       });
     }
@@ -85,12 +84,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
   void _clearFilterDate() => setState(() => _filterDate = null);
 
-  // ── build ───────────────────────────────────────────────────────────
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6F5),
+      backgroundColor: AppColors.offWhite,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -98,15 +95,15 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             _buildTopBar(),
             Expanded(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                padding: const EdgeInsets.fromLTRB(18, 0, 18, 28),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
                     _buildSummaryCards(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     _buildStatisticsSection(),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
                     _buildTabsAndList(),
                   ],
                 ),
@@ -118,34 +115,50 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  // ── top bar ─────────────────────────────────────────────────────────
-
   Widget _buildTopBar() {
     return Container(
-      padding: const EdgeInsets.fromLTRB(4, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 10),
       child: Row(
         children: [
-          const SizedBox(width: 4),
           GestureDetector(
             onTap: widget.onBack,
             child: Container(
-              width: 36,
-              height: 36,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
-                color: AppColors.primaryGreen.withOpacity(0.12),
-                shape: BoxShape.circle,
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: AppColors.cardShadow,
               ),
               child: const Icon(Icons.arrow_back_ios_new_rounded,
                   size: 16, color: AppColors.primaryGreen),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           const Text(
             'Analytics',
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w800,
-              color: Color(0xFF1A1A1A),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: AppColors.textDark,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const Spacer(),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: AppColors.primaryGreen.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Text(
+              _monthLabel,
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryGreen,
+              ),
             ),
           ),
         ],
@@ -153,49 +166,44 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  // ── summary cards ───────────────────────────────────────────────────
-
   Widget _buildSummaryCards() {
     final fmt = NumberFormat('#,##0');
     return Row(
       children: [
         Expanded(
           child: _SummaryCard(
-            label: 'Monthly total Income',
+            label: 'Monthly Income',
             value: '₱${fmt.format(_totalIncome)}',
-            icon: Icons.attach_money_rounded,
-            bgColor: const Color(0xFFE8F5E8),
-            iconColor: const Color(0xFF4CAF50),
-            valueColor: const Color(0xFF1A1A1A),
+            icon: Icons.south_rounded,
+            gradient: AppColors.incomeGradient,
           ),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: _SummaryCard(
-            label: 'Monthly total expense',
-            icon: Icons.money_off_rounded,
+            label: 'Monthly Expense',
             value: '₱${fmt.format(_totalExpense)}',
-            bgColor: const Color(0xFFFFF8E1),
-            iconColor: const Color(0xFFE6A800),
-            valueColor: const Color(0xFF1A1A1A),
+            icon: Icons.north_rounded,
+            gradient: AppColors.expenseGradient,
           ),
         ),
       ],
     );
   }
 
-  // ── statistics / bar chart ──────────────────────────────────────────
-
   Widget _buildStatisticsSection() {
     final weeks = _weeklyData;
-    final allValues = weeks.expand((w) => [w.income, w.expense]).toList();
-    final maxVal = allValues.isEmpty ? 1.0 : allValues.reduce((a, b) => a > b ? a : b);
+    final allValues =
+        weeks.expand((w) => [w.income, w.expense]).toList();
+    final maxVal =
+        allValues.isEmpty ? 1.0 : allValues.reduce((a, b) => a > b ? a : b);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -207,11 +215,12 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Statistics',
+                    'Weekly Overview',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 17,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFF1A1A1A),
+                      color: AppColors.textDark,
+                      letterSpacing: -0.3,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -220,28 +229,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         ? DateFormat('MMM d, yyyy').format(_filterDate!)
                         : _monthLabel,
                     style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF888888),
-                    ),
+                        fontSize: 12, color: AppColors.textGrey),
                   ),
                 ],
               ),
               Row(
                 children: [
-                  // Functional calendar chip with clear option
                   GestureDetector(
-                    onTap: _filterDate != null ? _clearFilterDate : _pickFilterDate,
+                    onTap: _filterDate != null
+                        ? _clearFilterDate
+                        : _pickFilterDate,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: _filterDate != null
                             ? AppColors.primaryGreen.withOpacity(0.1)
-                            : const Color(0xFFF5F5F5),
+                            : AppColors.offWhite,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: _filterDate != null
                               ? AppColors.primaryGreen
-                              : const Color(0xFFE0E0E0),
+                              : AppColors.cardBorder,
                         ),
                       ),
                       child: Row(
@@ -249,15 +258,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                         children: [
                           Text(
                             _filterDate != null
-                                ? DateFormat('MMM d').format(_filterDate!)
+                                ? DateFormat('MMM d')
+                                    .format(_filterDate!)
                                 : _monthLabel,
                             style: TextStyle(
                               fontSize: 11,
                               color: _filterDate != null
                                   ? AppColors.primaryGreen
-                                  : const Color(0xFF555555),
+                                  : AppColors.textMid,
                               fontWeight: _filterDate != null
-                                  ? FontWeight.w600
+                                  ? FontWeight.w700
                                   : FontWeight.w400,
                             ),
                           ),
@@ -266,17 +276,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                             _filterDate != null
                                 ? Icons.close_rounded
                                 : Icons.calendar_today_rounded,
-                            size: 12,
+                            size: 11,
                             color: _filterDate != null
                                 ? AppColors.primaryGreen
-                                : const Color(0xFF888888),
+                                : AppColors.textGrey,
                           ),
                         ],
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  // Arrow navigates to Monthly Calendar view
                   GestureDetector(
                     onTap: () {
                       Navigator.of(context).push(MaterialPageRoute(
@@ -287,11 +296,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       ));
                     },
                     child: Container(
-                      width: 30,
-                      height: 30,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF1A1A1A),
-                        shape: BoxShape.circle,
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(
+                        color: AppColors.deepForest,
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Icon(Icons.arrow_forward_rounded,
                           size: 16, color: Colors.white),
@@ -301,10 +310,35 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 8),
+          // Legend
+          Row(
+            children: [
+              _legendDot(AppColors.primaryGreen, 'Income'),
+              const SizedBox(width: 14),
+              _legendDot(AppColors.goldPrimary, 'Expense'),
+            ],
+          ),
+          const SizedBox(height: 18),
           _buildBarChart(weeks, maxVal),
         ],
       ),
+    );
+  }
+
+  Widget _legendDot(Color color, String label) {
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 5),
+        Text(label,
+            style: const TextStyle(
+                fontSize: 11, color: AppColors.textGrey, fontWeight: FontWeight.w500)),
+      ],
     );
   }
 
@@ -312,11 +346,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final yLabels = _yAxisLabels(maxVal);
 
     return SizedBox(
-      height: 220,
+      height: 200,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Y-axis labels
           Column(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -324,13 +357,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 .map((v) => Text(
                       _formatYLabel(v),
                       style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFFAAAAAA),
-                      ),
+                          fontSize: 10, color: AppColors.textLight),
                     ))
                 .toList(),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               children: [
@@ -349,8 +380,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Horizontal baseline
-                const Divider(height: 1, color: Color(0xFFEEEEEE)),
+                const Divider(height: 1, color: AppColors.divider),
               ],
             ),
           ),
@@ -378,13 +408,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return '₱${v.toInt()}';
   }
 
-  // ── tabs + transaction list ─────────────────────────────────────────
-
   Widget _buildTabsAndList() {
     return Column(
       children: [
         _buildTabs(),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         _buildTransactionList(),
       ],
     );
@@ -393,22 +421,25 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Widget _buildTabs() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(50),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppColors.cardShadow,
       ),
       padding: const EdgeInsets.all(4),
       child: Row(
         children: [
-          Expanded(child: _TabButton(
+          Expanded(
+              child: _TabButton(
             label: 'Income',
             isActive: _showIncome,
             activeColor: AppColors.primaryGreen,
             onTap: () => setState(() => _showIncome = true),
           )),
-          Expanded(child: _TabButton(
+          Expanded(
+              child: _TabButton(
             label: 'Expenses',
             isActive: !_showIncome,
-            activeColor: const Color(0xFFE6A800),
+            activeColor: AppColors.goldDeep,
             onTap: () => setState(() => _showIncome = false),
           )),
         ],
@@ -420,19 +451,27 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final list = _filtered;
     if (list.isEmpty) {
       return Container(
-        padding: const EdgeInsets.symmetric(vertical: 40),
+        padding: const EdgeInsets.symmetric(vertical: 44),
         alignment: Alignment.center,
         child: Column(
           children: [
-            Icon(Icons.receipt_long_outlined,
-                size: 48, color: Colors.grey.shade300),
-            const SizedBox(height: 12),
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceAlt,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.receipt_long_outlined,
+                  size: 30, color: AppColors.textLight),
+            ),
+            const SizedBox(height: 14),
             Text(
               'No ${_showIncome ? 'income' : 'expense'} this month',
               style: const TextStyle(
                 fontSize: 14,
-                color: Color(0xFF888888),
-                fontWeight: FontWeight.w500,
+                color: AppColors.textGrey,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -442,15 +481,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: AppColors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: AppColors.cardShadow,
       ),
       child: ListView.separated(
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,
         itemCount: list.length,
         separatorBuilder: (_, __) =>
-            const Divider(height: 1, indent: 72, color: Color(0xFFF0F0F0)),
+            const Divider(height: 1, indent: 72, color: AppColors.divider),
         itemBuilder: (_, i) => _AnalyticsTxItem(transaction: list[i]),
       ),
     );
@@ -468,63 +508,55 @@ class _SummaryCard extends StatelessWidget {
   final String label;
   final String value;
   final IconData icon;
-  final Color bgColor;
-  final Color iconColor;
-  final Color valueColor;
+  final LinearGradient gradient;
 
   const _SummaryCard({
     required this.label,
     required this.value,
     required this.icon,
-    required this.bgColor,
-    required this.iconColor,
-    required this.valueColor,
+    required this.gradient,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(16),
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: AppColors.cardShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 18, color: Colors.white),
+          ),
+          const SizedBox(height: 12),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 11,
-              color: Color(0xFF888888),
-              fontWeight: FontWeight.w500,
+              color: Colors.white.withOpacity(0.8),
+              fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, size: 18, color: iconColor),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: valueColor,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: -0.5,
+            ),
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -547,9 +579,11 @@ class _BarGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const maxBarHeight = 140.0;
-    final incomeH = (income / maxVal * maxBarHeight).clamp(2.0, maxBarHeight);
-    final expenseH = (expense / maxVal * maxBarHeight).clamp(2.0, maxBarHeight);
+    const maxBarHeight = 130.0;
+    final incomeH =
+        (income / maxVal * maxBarHeight).clamp(3.0, maxBarHeight);
+    final expenseH =
+        (expense / maxVal * maxBarHeight).clamp(3.0, maxBarHeight);
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
@@ -559,14 +593,14 @@ class _BarGroup extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _Bar(height: incomeH, color: AppColors.primaryGreen),
-            const SizedBox(width: 4),
-            _Bar(height: expenseH, color: const Color(0xFFFFD740)),
+            const SizedBox(width: 5),
+            _Bar(height: expenseH, color: AppColors.goldPrimary),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 7),
         Text(
-          'Week $weekNum',
-          style: const TextStyle(fontSize: 10, color: Color(0xFF888888)),
+          'W$weekNum',
+          style: const TextStyle(fontSize: 10, color: AppColors.textGrey, fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -581,13 +615,13 @@ class _Bar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 400),
-      curve: Curves.easeOut,
-      width: 20,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeOutCubic,
+      width: 18,
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(6)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
       ),
     );
   }
@@ -612,18 +646,18 @@ class _TabButton extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: 13),
         decoration: BoxDecoration(
           color: isActive ? activeColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(50),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: isActive ? Colors.white : const Color(0xFF888888),
+              color: isActive ? Colors.white : AppColors.textGrey,
             ),
           ),
         ),
@@ -639,25 +673,23 @@ class _AnalyticsTxItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.isIncome;
-    final color =
-        isIncome ? const Color(0xFF4CAF50) : const Color(0xFFE53935);
+    final color = isIncome ? AppColors.incomeGreen : AppColors.expenseRed;
     final bgColor =
-        isIncome ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+        isIncome ? const Color(0xFFE8F7EE) : const Color(0xFFFFEBEA);
     final prefix = isIncome ? '+₱' : '-₱';
     final fmt = NumberFormat('#,##0');
-    final timeStr =
-        DateFormat('MMM d, h:mm a').format(transaction.date);
+    final timeStr = DateFormat('MMM d, h:mm a').format(transaction.date);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
         children: [
           Container(
-            width: 44,
-            height: 44,
+            width: 46,
+            height: 46,
             decoration: BoxDecoration(
               color: bgColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
             ),
             child: Center(
               child: Text(transaction.category.emoji,
@@ -674,16 +706,14 @@ class _AnalyticsTxItem extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF1A1A1A),
+                    color: AppColors.textDark,
                   ),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Text(
                   timeStr,
                   style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF888888),
-                  ),
+                      fontSize: 11, color: AppColors.textGrey),
                 ),
               ],
             ),
@@ -691,9 +721,10 @@ class _AnalyticsTxItem extends StatelessWidget {
           Text(
             '$prefix${fmt.format(transaction.amount)}',
             style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
               color: color,
+              letterSpacing: -0.3,
             ),
           ),
         ],

@@ -13,6 +13,7 @@ class SetupScreen extends StatefulWidget {
 
 class _SetupScreenState extends State<SetupScreen> {
   final TextEditingController _nameController = TextEditingController();
+  bool _focused = false;
 
   @override
   void dispose() {
@@ -24,7 +25,12 @@ class _SetupScreenState extends State<SetupScreen> {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter your name.')),
+        SnackBar(
+          content: const Text('Please enter your name.'),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: AppColors.primaryGreen,
+        ),
       );
       return;
     }
@@ -40,86 +46,133 @@ class _SetupScreenState extends State<SetupScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Spacer(),
-              _buildHeader(),
-              const SizedBox(height: 40),
-              _buildNameField(),
-              const SizedBox(height: 20),
-              ContinueButton(
-                label: 'START TRACKING',
-                onPressed: _onStartTracking,
+      body: Column(
+        children: [
+          // Green header strip
+          Container(
+            height: 220,
+            width: double.infinity,
+            decoration: const BoxDecoration(
+              gradient: AppColors.headerGradient,
+              borderRadius: BorderRadius.vertical(bottom: Radius.circular(36)),
+            ),
+            padding: const EdgeInsets.fromLTRB(28, 60, 28, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pop(),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.arrow_back_ios_new_rounded,
+                        size: 16, color: Colors.white),
+                  ),
+                ),
+                const Text(
+                  "Let's set you up",
+                  style: TextStyle(
+                    fontSize: 30,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  "Enter your name and you're good to go.",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.white.withOpacity(0.6),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          // Form section
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(28, 36, 28, 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Your Name',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.textMid,
+                      letterSpacing: 0.3,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Focus(
+                    onFocusChange: (v) => setState(() => _focused = v),
+                    child: TextField(
+                      controller: _nameController,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Lester',
+                        hintStyle: const TextStyle(
+                          color: AppColors.textLight,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        prefixIcon: Icon(
+                          Icons.person_outline_rounded,
+                          color: _focused
+                              ? AppColors.primaryGreen
+                              : AppColors.textLight,
+                          size: 22,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 18),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                              color: AppColors.cardBorder, width: 1.5),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: const BorderSide(
+                              color: AppColors.primaryGreen, width: 2),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.offWhite,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  ContinueButton(
+                    label: 'START TRACKING',
+                    onPressed: _onStartTracking,
+                  ),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: Text(
+                      'Your data stays on your device',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textGrey,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const Spacer(),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
-    );
-  }
-
-  Widget _buildHeader() {
-    return const Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Let's set you up",
-          style: TextStyle(
-            fontSize: 30,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textDark,
-          ),
-        ),
-        SizedBox(height: 8),
-        Text(
-          "Enter your name and\nyou're good to go.",
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w400,
-            color: AppColors.textGrey,
-            height: 1.5,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildNameField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Your name',
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-            color: AppColors.textDark,
-          ),
-        ),
-        const SizedBox(height: 8),
-        TextField(
-          controller: _nameController,
-          style: const TextStyle(fontSize: 15, color: AppColors.textDark),
-          decoration: InputDecoration(
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.cardBorder),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
-            ),
-            filled: true,
-            fillColor: AppColors.white,
-          ),
-        ),
-      ],
     );
   }
 }

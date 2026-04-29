@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/transaction.dart';
+import '../theme/app_colors.dart';
 
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
@@ -10,8 +11,10 @@ class TransactionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.isIncome;
-    final color = isIncome ? const Color(0xFF4CAF50) : const Color(0xFFE53935);
-    final bgColor = isIncome ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
+    final amountColor = isIncome ? AppColors.incomeGreen : AppColors.expenseRed;
+    final bgColor = isIncome
+        ? const Color(0xFFE8F5EE)
+        : const Color(0xFFFFEBEA);
     final amountPrefix = isIncome ? '+₱' : '-₱';
     final typeLabel = isIncome ? 'Income' : 'Expense';
     final dateStr = DateFormat('MMM d, h:mm a').format(transaction.date);
@@ -19,15 +22,16 @@ class TransactionItem extends StatelessWidget {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14),
+          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
           child: Row(
             children: [
+              // Icon bubble
               Container(
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
                   color: bgColor,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Center(
                   child: Text(
@@ -37,6 +41,7 @@ class TransactionItem extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 14),
+              // Title + meta
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -46,29 +51,57 @@ class TransactionItem extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1A1A1A),
+                        color: AppColors.textDark,
+                        letterSpacing: -0.1,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '$typeLabel  ·  $dateStr',
-                      style: const TextStyle(fontSize: 12, color: Color(0xFF888888)),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: bgColor,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            typeLabel,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: amountColor,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          dateStr,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: AppColors.textGrey,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
+              // Amount
               Text(
                 '$amountPrefix${NumberFormat('#,##0.00').format(transaction.amount)}',
                 style: TextStyle(
                   fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: color,
+                  fontWeight: FontWeight.w800,
+                  color: amountColor,
+                  letterSpacing: -0.3,
                 ),
               ),
             ],
           ),
         ),
-        const Divider(height: 1, color: Color(0xFFEEEEEE)),
+        const Divider(height: 1, indent: 64, color: AppColors.divider),
       ],
     );
   }

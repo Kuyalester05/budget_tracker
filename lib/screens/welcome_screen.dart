@@ -38,7 +38,7 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(gradient: AppColors.backgroundGradient),
+        decoration: const BoxDecoration(gradient: AppColors.headerGradient),
         child: Column(
           children: [
             Expanded(child: _buildTopSection()),
@@ -56,12 +56,34 @@ class WelcomeScreen extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const BursaLogo(size: 110),
-          const SizedBox(height: 28),
+          // Decorative ring around logo
+          Container(
+            width: 130,
+            height: 130,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppColors.goldPrimary.withOpacity(0.25),
+                width: 2,
+              ),
+            ),
+            child: Center(child: const BursaLogo(size: 110)),
+          ),
+          const SizedBox(height: 32),
           const Text(
             'Welcome to\nBURSA',
             textAlign: TextAlign.center,
             style: AppTextStyles.welcomeTitle,
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Your personal finance companion',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: Colors.white.withOpacity(0.55),
+              letterSpacing: 0.3,
+            ),
           ),
         ],
       ),
@@ -73,19 +95,42 @@ class WelcomeScreen extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: AppColors.offWhite,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
       ),
-      padding: const EdgeInsets.fromLTRB(20, 28, 20, 36),
+      padding: const EdgeInsets.fromLTRB(22, 32, 22, 40),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Pull handle
+          Center(
+            child: Container(
+              width: 36,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 28),
+              decoration: BoxDecoration(
+                color: AppColors.textLight,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const Text(
+            'Everything you need',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textDark,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const SizedBox(height: 16),
           ..._features.map(
             (feature) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: 10),
               child: FeatureCard(feature: feature),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           ContinueButton(onPressed: () => _onContinue(context)),
         ],
       ),
