@@ -590,14 +590,23 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+        child: SizedBox(
+          height: 64,
+          child: Stack(
+            alignment: Alignment.center,
             children: [
-              _navItem(0, Icons.home_rounded, 'Home'),
+              Row(
+                children: [
+                  Expanded(
+                    child: _navItem(0, Icons.home_rounded, 'Home'),
+                  ),
+                  const SizedBox(width: 70),
+                  Expanded(
+                    child: _navItem(2, Icons.bar_chart_rounded, 'Analytics'),
+                  ),
+                ],
+              ),
               _navItemCenter(),
-              _navItem(2, Icons.bar_chart_rounded, 'Analytics'),
             ],
           ),
         ),
@@ -611,6 +620,7 @@ class _HomeScreenState extends State<HomeScreen> {
       onTap: () => setState(() => _currentIndex = index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         decoration: BoxDecoration(
           color: isActive
@@ -621,9 +631,13 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon,
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 200),
+              child: Icon(icon,
+                key: ValueKey(isActive),
                 color: isActive ? AppColors.primaryGreen : AppColors.textLight,
-                size: 24),
+                size: isActive ? 26 : 24),
+            ),
             const SizedBox(height: 3),
             Text(label,
                 style: TextStyle(
@@ -643,21 +657,29 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _navItemCenter() {
     return GestureDetector(
       onTap: () => setState(() => _currentIndex = 1),
-      child: Container(
-        width: 58,
-        height: 58,
-        decoration: BoxDecoration(
-          gradient: AppColors.buttonGradient,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primaryGreen.withOpacity(0.4),
-              blurRadius: 16,
-              offset: const Offset(0, 5),
-            ),
-          ],
+      child: TweenAnimationBuilder<double>(
+        tween: Tween(begin: 1.0, end: 1.0),
+        duration: const Duration(milliseconds: 150),
+        builder: (context, scale, child) => Transform.scale(
+          scale: scale,
+          child: child,
         ),
-        child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+        child: Container(
+          width: 58,
+          height: 58,
+          decoration: BoxDecoration(
+            gradient: AppColors.buttonGradient,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primaryGreen.withOpacity(0.4),
+                blurRadius: 16,
+                offset: const Offset(0, 5),
+              ),
+            ],
+          ),
+          child: const Icon(Icons.add_rounded, color: Colors.white, size: 30),
+        ),
       ),
     );
   }

@@ -354,10 +354,13 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: yLabels.reversed
-                .map((v) => Text(
-                      _formatYLabel(v),
-                      style: const TextStyle(
-                          fontSize: 10, color: AppColors.textLight),
+                .map((v) => SizedBox(
+                      height: 20,
+                      child: Text(
+                        _formatYLabel(v),
+                        style: const TextStyle(
+                            fontSize: 10, color: AppColors.textLight),
+                      ),
                     ))
                 .toList(),
           ),
@@ -390,8 +393,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   List<double> _yAxisLabels(double max) {
-    if (max == 0) return [0, 1000, 2000, 3000, 4000, 5000];
-    final step = _niceStep(max / 4);
+    // Always use 5000 as the ceiling when data is under 5K
+    final effectiveMax = max < 5000 ? 5000.0 : max;
+    final step = _niceStep(effectiveMax / 4);
     return List.generate(6, (i) => i * step);
   }
 
@@ -642,22 +646,28 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 13),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Center(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: isActive ? Colors.white : AppColors.textGrey,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        splashColor: activeColor.withOpacity(0.15),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeInOut,
+          padding: const EdgeInsets.symmetric(vertical: 13),
+          decoration: BoxDecoration(
+            color: isActive ? activeColor : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: isActive ? Colors.white : AppColors.textGrey,
+              ),
             ),
           ),
         ),
@@ -673,61 +683,69 @@ class _AnalyticsTxItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isIncome = transaction.isIncome;
-    final color = isIncome ? AppColors.incomeGreen : AppColors.expenseRed;
+    final color = isIncome ? AppColors.incomeGreen : Colors.red.shade600;
     final bgColor =
-        isIncome ? const Color(0xFFE8F7EE) : const Color(0xFFFFEBEA);
+        isIncome ? const Color(0xFFE8F7EE) : const Color(0xFFFFDDDD);
     final prefix = isIncome ? '+₱' : '-₱';
     final fmt = NumberFormat('#,##0');
     final timeStr = DateFormat('MMM d, h:mm a').format(transaction.date);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      child: Row(
-        children: [
-          Container(
-            width: 46,
-            height: 46,
-            decoration: BoxDecoration(
-              color: bgColor,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: Text(transaction.category.emoji,
-                  style: const TextStyle(fontSize: 20)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  transaction.title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textDark,
-                  ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {},
+        splashColor: color.withOpacity(0.08),
+        highlightColor: color.withOpacity(0.04),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  timeStr,
-                  style: const TextStyle(
-                      fontSize: 11, color: AppColors.textGrey),
+                child: Center(
+                  child: Text(transaction.category.emoji,
+                      style: const TextStyle(fontSize: 20)),
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      transaction.title,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      timeStr,
+                      style: const TextStyle(
+                          fontSize: 11, color: AppColors.textGrey),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '$prefix${fmt.format(transaction.amount)}',
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: color,
+                  letterSpacing: -0.3,
+                ),
+              ),
+            ],
           ),
-          Text(
-            '$prefix${fmt.format(transaction.amount)}',
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w800,
-              color: color,
-              letterSpacing: -0.3,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

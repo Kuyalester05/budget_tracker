@@ -21,7 +21,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   TransactionType _type = TransactionType.income;
   double _amount = 0;
   TransactionCategory _category = TransactionCategory.salary;
-  DateTime? _date;
+  DateTime _date = DateTime.now();
   final _descController = TextEditingController();
 
   static const List<double> _quickAmounts = [50, 100, 200, 500, 1000];
@@ -37,7 +37,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
-      initialDate: _date ?? DateTime.now(),
+      initialDate: _date,
       firstDate: DateTime(2020),
       lastDate: DateTime(2100),
       builder: (ctx, child) => Theme(
@@ -56,13 +56,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _showSnack('Please enter an amount greater than ₱0.', isError: true);
       return;
     }
-    if (_date == null) {
-      _showSnack('Please select a date.', isError: true);
-      return;
-    }
     final now = DateTime.now();
     final transactionDate = DateTime(
-      _date!.year, _date!.month, _date!.day,
+      _date.year, _date.month, _date.day,
       now.hour, now.minute, now.second,
     );
     final desc = _descController.text.trim();
@@ -77,7 +73,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     await widget.onAdd(transaction);
     setState(() {
       _amount = 0;
-      _date = null;
+      _date = DateTime.now();
       _descController.clear();
       _category = TransactionCategory.salary;
       _type = TransactionType.income;
@@ -208,10 +204,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _typeButton(String label, String emoji, TransactionType type,
       LinearGradient activeGradient, Color inactiveBg) {
     final isSelected = _type == type;
-    return GestureDetector(
+    return _PressableScale(
       onTap: () => setState(() => _type = type),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOut,
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           gradient: isSelected ? activeGradient : null,
@@ -268,12 +265,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 Text(
                   _amount == 0 ? 'Tap to enter' : '₱${fmt.format(_amount)}',
                   style: TextStyle(
-                    fontSize: _amount == 0 ? 20 : 38,
+                    fontSize: _amount == 0 ? 32 : 38,
                     fontWeight: FontWeight.w900,
                     color: _amount == 0
-                        ? Colors.white38
+                        ? Colors.white70
                         : AppColors.goldLight,
-                    letterSpacing: -1.5,
+                    letterSpacing: _amount == 0 ? 0.5 : -1.5,
                   ),
                 ),
                 if (_amount > 0) ...[
@@ -390,30 +387,30 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             )),
         const SizedBox(height: 14),
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: 8,
+          runSpacing: 8,
           children: categories.map((cat) {
             final isSelected = _category == cat;
-            return GestureDetector(
+            return _PressableScale(
               onTap: () => setState(() => _category = cat),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                width: 72,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
                   gradient: isSelected ? AppColors.buttonGradient : null,
                   color: isSelected ? null : AppColors.surfaceAlt,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                   boxShadow: isSelected ? AppColors.cardShadow : null,
                 ),
-                child: Column(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(cat.emoji, style: const TextStyle(fontSize: 24)),
-                    const SizedBox(height: 6),
+                    Text(cat.emoji, style: const TextStyle(fontSize: 18)),
+                    const SizedBox(width: 6),
                     Text(
                       cat.label,
                       style: TextStyle(
-                        fontSize: 10,
+                        fontSize: 12,
                         fontWeight: FontWeight.w700,
                         color: isSelected ? Colors.white : AppColors.textGrey,
                       ),
@@ -448,32 +445,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               color: AppColors.offWhite,
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: _date != null
-                    ? AppColors.primaryGreen
-                    : AppColors.cardBorder,
-                width: _date != null ? 1.5 : 1,
+                color: AppColors.primaryGreen,
+                width: 1.5,
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  _date == null
-                      ? 'Select a date'
-                      : DateFormat('EEEE, MMM d, yyyy').format(_date!),
-                  style: TextStyle(
+                  DateFormat('EEEE, MMM d, yyyy').format(_date),
+                  style: const TextStyle(
                     fontSize: 14,
-                    color: _date == null
-                        ? AppColors.textLight
-                        : AppColors.textDark,
-                    fontWeight:
-                        _date != null ? FontWeight.w600 : FontWeight.w400,
+                    color: AppColors.textDark,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                Icon(Icons.calendar_month_rounded,
-                    color: _date != null
-                        ? AppColors.primaryGreen
-                        : AppColors.textLight,
+                const Icon(Icons.calendar_month_rounded,
+                    color: AppColors.primaryGreen,
                     size: 20),
               ],
             ),
@@ -655,6 +643,62 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Pressable scale widget for tap animations ─────────────────────────────────
+
+class _PressableScale extends StatefulWidget {
+  final Widget child;
+  final VoidCallback onTap;
+
+  const _PressableScale({required this.child, required this.onTap});
+
+  @override
+  State<_PressableScale> createState() => _PressableScaleState();
+}
+
+class _PressableScaleState extends State<_PressableScale>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 100),
+      lowerBound: 0.0,
+      upperBound: 1.0,
+      value: 1.0,
+    );
+    _scale = Tween<double>(begin: 1.0, end: 0.93).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _onTapDown(TapDownDetails _) => _ctrl.forward();
+  void _onTapUp(TapUpDetails _) {
+    _ctrl.reverse();
+    widget.onTap();
+  }
+  void _onTapCancel() => _ctrl.reverse();
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: _onTapDown,
+      onTapUp: _onTapUp,
+      onTapCancel: _onTapCancel,
+      child: ScaleTransition(scale: _scale, child: widget.child),
     );
   }
 }

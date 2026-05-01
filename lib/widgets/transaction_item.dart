@@ -17,88 +17,99 @@ class TransactionItem extends StatelessWidget {
         : const Color(0xFFFFEBEA);
     final amountPrefix = isIncome ? '+₱' : '-₱';
     final typeLabel = isIncome ? 'Income' : 'Expense';
+    final typeLabelColor = isIncome ? AppColors.incomeGreen : Colors.red;
+    final typeBgColor = isIncome ? const Color(0xFFE8F5EE) : const Color(0xFFFFDDDD);
     final dateStr = DateFormat('MMM d, h:mm a').format(transaction.date);
 
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
-          child: Row(
-            children: [
-              // Icon bubble
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: bgColor,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Center(
-                  child: Text(
-                    transaction.category.emoji,
-                    style: const TextStyle(fontSize: 22),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              // Title + meta
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      transaction.title,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textDark,
-                        letterSpacing: -0.1,
+        Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            splashColor: amountColor.withOpacity(0.08),
+            highlightColor: amountColor.withOpacity(0.04),
+            onTap: () {},
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 2),
+              child: Row(
+                children: [
+                  // Icon bubble
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      color: bgColor,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Center(
+                      child: Text(
+                        transaction.category.emoji,
+                        style: const TextStyle(fontSize: 22),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Row(
+                  ),
+                  const SizedBox(width: 14),
+                  // Title + meta
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 7, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: bgColor,
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: Text(
-                            typeLabel,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: amountColor,
-                              letterSpacing: 0.3,
-                            ),
+                        Text(
+                          transaction.title,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: AppColors.textDark,
+                            letterSpacing: -0.1,
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          dateStr,
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: AppColors.textGrey,
-                          ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: typeBgColor,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                typeLabel,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: typeLabelColor,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              dateStr,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppColors.textGrey,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  // Amount
+                  Text(
+                    '$amountPrefix${NumberFormat('#,##0.00').format(transaction.amount)}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: amountColor,
+                      letterSpacing: -0.3,
+                    ),
+                  ),
+                ],
               ),
-              // Amount
-              Text(
-                '$amountPrefix${NumberFormat('#,##0.00').format(transaction.amount)}',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: amountColor,
-                  letterSpacing: -0.3,
-                ),
-              ),
-            ],
+            ),
           ),
         ),
         const Divider(height: 1, indent: 64, color: AppColors.divider),
