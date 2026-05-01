@@ -6,6 +6,7 @@ import '../theme/app_colors.dart';
 import '../widgets/transaction_item.dart';
 import 'add_transaction_screen.dart';
 import 'analytics_screen.dart';
+import 'edit_transaction_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userName;
@@ -69,6 +70,49 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  Future<void> _deleteTransaction(Transaction t) async {
+    await DatabaseHelper.instance.deleteTransaction(t.id);
+    setState(() => _transactions.removeWhere((x) => x.id == t.id));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Transaction deleted'),
+        backgroundColor: Colors.red.shade600,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        action: SnackBarAction(
+          label: 'Undo',
+          textColor: Colors.white,
+          onPressed: () async {
+            await DatabaseHelper.instance.insertTransaction(t);
+            setState(() {
+              _transactions.add(t);
+              _transactions.sort((a, b) => b.date.compareTo(a.date));
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _editTransaction(Transaction t) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditTransactionScreen(
+          transaction: t,
+          onSave: (updated) async {
+            await DatabaseHelper.instance.updateTransaction(updated);
+            setState(() {
+              final idx = _transactions.indexWhere((x) => x.id == updated.id);
+              if (idx != -1) _transactions[idx] = updated;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickDate() async {
     final picked = await showDatePicker(
       context: context,
@@ -111,6 +155,7 @@ class _HomeScreenState extends State<HomeScreen> {
           AddTransactionScreen(
             recentTransactions: _transactions,
             onAdd: _addTransaction,
+            onBack: () => setState(() => _currentIndex = 0),
           ),
           AnalyticsScreen(
             transactions: _transactions,
@@ -533,7 +578,11 @@ class _HomeScreenState extends State<HomeScreen> {
               ? _buildEmptyState()
               : Column(
                   children:
-                      filtered.map((t) => TransactionItem(transaction: t)).toList(),
+                      filtered.map((t) => TransactionItem(
+                        transaction: t,
+                        onDelete: () => _deleteTransaction(t),
+                        onEdit: () => _editTransaction(t),
+                      )).toList(),
                 ),
         ),
       ],

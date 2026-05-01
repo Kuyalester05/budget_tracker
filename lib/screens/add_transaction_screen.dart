@@ -6,11 +6,13 @@ import '../theme/app_colors.dart';
 class AddTransactionScreen extends StatefulWidget {
   final List<Transaction> recentTransactions;
   final Future<void> Function(Transaction) onAdd;
+  final VoidCallback? onBack;
 
   const AddTransactionScreen({
     super.key,
     required this.recentTransactions,
     required this.onAdd,
+    this.onBack,
   });
 
   @override
@@ -139,15 +141,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       padding: const EdgeInsets.only(top: 20),
       child: Row(
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.primaryGreen.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(13),
+          GestureDetector(
+            onTap: widget.onBack,
+            child: Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: AppColors.white,
+                borderRadius: BorderRadius.circular(13),
+                boxShadow: AppColors.cardShadow,
+              ),
+              child: const Icon(Icons.arrow_back_ios_new_rounded,
+                  size: 16, color: AppColors.primaryGreen),
             ),
-            child: const Icon(Icons.add_rounded,
-                color: AppColors.primaryGreen, size: 22),
           ),
           const SizedBox(width: 12),
           const Text(
